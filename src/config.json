@@ -1,0 +1,102 @@
+{
+    "gen": {
+        "formats": {
+            "check": {
+                "que": 0,
+                "params": {
+                    "rules": true
+                }
+            },
+            "get": {
+                "que": 2,
+                "params": {
+                    "checkMethodType": "check",
+                    "mainMethodType": "find",
+                    "cacheMethodType": "cache"
+                }
+            },
+            "post": {
+                "que": 2,
+                "params": {
+                    "checkMethodType": "check",
+                    "cacheMethodType": "cache",
+                    "checkEquals": true
+                }
+            },
+            "cache": {
+                "que": 1,
+                "params": {
+                    "checkMethodType": "check"
+                }
+            },
+            "find": {
+                "que": 1,
+                "params": {
+                    "checkMethodType": "check"
+                }
+            },
+            "put": {
+                "que": 2,
+                "params": {
+                    "checkMethodType": "check",
+                    "mainMethodType": "find",
+                    "checkEquals": true
+                }
+            },
+            "delete": {
+                "que": 2,
+                "params": {
+                    "checkMethodType": "check",
+                    "mainMethodType": "find"
+                }
+            },
+            "postJWT": {
+                "que": 1,
+                "params": {
+                    "checkMethodType": "check",
+                    "cacheMethodType": "cache"
+                }
+            },
+            "getJWT": {
+                "que": 1,
+                "params": {
+                    "cacheMethodType": "cache"
+                }
+            },
+            "inOutJWT": {
+                "que": 4,
+                "params": {
+                    "mainMethodType": "any",
+                    "getJWTMethodType": "getJWT",
+                    "postJWTMethodType": "postJWT"
+                }
+            },
+            "inJWT": {
+                "que": 4,
+                "params": {
+                    "mainMethodType": "any",
+                    "getJWTMethodType": "getJWT"
+                }
+            },
+            "outJWT": {
+                "que": 4,
+                "params": {
+                    "mainMethodType": "any",
+                    "postJWTMethodType": "postJWT"
+                }
+            },
+            "getById": {
+                "que": 1,
+                "params": {}
+            }
+        }
+    },
+    "debug": false,
+    "DB": {
+		"user": "",
+		"password": "",
+		"host": "",
+		"database": ""
+	},
+    "JWTS": ""
+}

@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "jsonwebtoken": "^9.0.0",
+    "mongodb": "^5.1.0",
+    "mongoose": "^7.0.0"
+  },
+  "name": "dbh2",
+  "version": "1.0a",
+  "main": "src/DBH.js",
+  "scripts": {
+    "test": "node src/test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
