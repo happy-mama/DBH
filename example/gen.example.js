@@ -28,93 +28,118 @@ const props = {
                 }
             }
         },
-        format: [ // *formats to be generated
-            {
-                name: "getUser", // *name of generated method
-                type: "get", // *type of template (see config.json)
-                params: { // params of template
-                    useCheck: true, // allows method to check schema params to valid
-                    cacheMethod: "cacheUser", // [needs prop.cache.use : true][format name] chose what cache method will be used
-                    mainMethod: "findUser" // *[format name] chose what method will be used
+        format: { // *formats to be generated
+            checkAll: { // *name of generated method
+                type: "check", // *type of template (see config.json)
+                params: {}, // params of template
+                errors: { // errors of template (see config.json)
+                    q: "E_UserQ", 
+                    TYPEOF_RULE: "E_UserTRE",
+                    RULE: "E_UserRE"
                 }
-            }, {
-                name: "getUserNoCheck",
+            },
+            checkLorEP: {
+                type: "check",
+                params: {
+                    rules: ["login|email", "password"] // ables method to be called without some properties
+                }
+            },
+            login: {
+                type: "get",
+                params: {
+                    useCheck: true, // allows method to check schema params to valid
+                    checkMethod: "checkLorEP",
+                    cacheMethod: "cacheUser", // [needs prop.cache.use : true][format name] chose what cache method will be used
+                    mainMethod: "findUser", // *[format name] chose what method will be used
+                }
+            },
+            auth: {
                 type: "get",
                 params: {
                     cacheMethod: "cacheUser",
                     mainMethod: "findUser"
                 }
-            }, {
-                name: "postUser",
+            },
+            authJWT: {
+                type: "inJWT",
+                params: {
+                    mainMethod: "auth",
+                    getJWTMethod: "getJWTUser"
+                }
+            },
+            register: {
                 type: "post",
                 params: {
-                    useCheck: true,
-                    cacheMethod: "cacheUser"
+                    checkEquals: ["login", "email"],
+                    checkMethod: "checkLorEP",
+                    cacheMethod: "cacheUser",
+                    disableCopies: true // throws error on try to create copy of Object in DB
+                },
+                errors: {
+                    disableCopies: "E_UserDC",
+                    checkEquals: "E_UserCE:%equal%" // this error has %equal% option that will be replaced with DB property that is incorrect
                 }
-            }, {
-                name: "cacheUser",
+            },
+            cacheUser: {
                 type: "cache",
-                params: {
-                    useCheck: true,
-                    mainMethod: ""
+                params: {},
+                errors: {
+                    main: "E_UserNull"
                 }
-            }, {
-                name: "findUser",
+            },
+            findUser: {
                 type: "find",
-                params: {
-                    useCheck: true,
-                    cacheMethod: "cacheUser"
+                params: {},
+                errors: {
+                    main: "E_UserNF"
                 }
-            }, {
-                name: "putUser",
-                type: "put",
-                params: {
-                    useCheck: true,
-                    checkEquals: ["login", "email"], // checks if DB already has this fields equals to edit options
-                    mainMethod: "findUser",
-                    cacheMethod: "cacheUser"
-                }
-            }, {
-                name: "deleteUser",
+            },
+            deleteUser: {
                 type: "delete",
                 params: {
-                    useCheck: true,
+                    checkMethod: "checkAll",
                     mainMethod: "findUser"
                 }
-            }, {
-                name: "getUserJWT",
-                type: "getJWT",
-                params: {
-                    useCheck: true,
-                    cacheMethod: "cacheUser"
-                }
-            }, {
-                name: "postUserJWT",
+            },
+            postJWTUser: {
                 type: "postJWT",
                 params: {
-                    useCheck: true,
                     cacheMethod: "cacheUser"
                 }
-            }, {
-                name: "putUserInOutJWT",
-                type: "putInOutJWT",
+            },
+            getJWTUser: {
+                type: "getJWT",
                 params: {
-                    useCheck: true,
-                    getJWTMethod: "getUserJWT",
-                    postJWTMethod: "postUserJWT",
-                    mainMethod: "putUser"
+                    cacheMethod: "cacheUser"
+                },
+                errors: {
+                    q: "E_q",
+                    JWTstring: "E_UserJWTINAS",
+                    JWTerror: "E_UserJWTE"
                 }
-            }, {
-                name: "getUserInOutJWT",
-                type: "getInOutJWT",
+            },
+            putUser: {
+                type: "put",
                 params: {
-                    useCheck: true,
-                    getJWTMethod: "getUserJWT",
-                    postJWTMethod: "postUserJWT",
-                    mainMethod: "getUserNoCheck"
+                    checkMethod: "checkLorEP",
+                    mainMethod: "findUser",
+                    checkEquals: ["login", "email"]
+                },
+                errors: {
+                    main: "E_UserPB",
+                    q: "E_q",
+                    checkEquals: "E_UserCE:%equal%"
+                }
+            },
+            getbyId: {
+                type: "getById",
+                params: {},
+                errors: {
+                    q: "E_q",
+                    main: "E_UserNF"
                 }
             }
-        ]
+        }
     }
 }
 

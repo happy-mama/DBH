@@ -4,24 +4,25 @@
 ||_| | _ <   |  _  |/ _ \| . ' | |_| | |__| ___|    /
 |___/|___/   |_| |_|_/ \_|_|\__|____/|____|____|_|\_\
 
+MongoDB + mongoose
+v - 1.0а
+
+DataBase Handler
+by happy-mama
 */
 
-const JWT = require("jsonwebtoken");
-const mongoose = require("mongoose");
-const templates = require("./templates.js");
+let templates = require("./templates.js");
 let GEN = require("./gen.js")
-const config = require("./config.json")
 
 class DBH {
 
     constructor() {
-        this.mongoose = mongoose
-        this.JWT = JWT
-        this.builded = {}
+        this.mongoose = require("mongoose");
+        this.JWT = require("jsonwebtoken");
         this.temp = {
             DBNames: []
         }
-        this.config = config
+        this.config = require("./config.json")
     }
 
     /**
@@ -62,12 +63,14 @@ class DBH {
      * @returns {void}
      */
     stop() {
-        mongoose.disconnect()
+        this.mongoose.disconnect()
         process.exit("DBH:ERROR")
     }
 
     /**
      * Inits DBH class
+     * 
+     * I recomend to set config.initClearMemory to true, so this method will be `null` after init method
      * @param {object} myGen **Object** - put your GEN object (if void, used gen.js in src folder)
      * @returns {Promise<void>}
      */
@@ -82,11 +85,16 @@ class DBH {
                 GEN = myGen
             }
 
-            if (!config.JWTS) {
+            if (!this.config.JWTS) {
                 reject("ENOJWTS")
             }
 
-            if (!(config.DB.database || config.DB.host || config.DB.password || config.DB.user)) {
+            if (!(
+                this.config.DB.database ||
+                this.config.DB.host ||
+                this.config.DB.password ||
+                this.config.DB.user
+            )) {
                 reject("ENODBPROPERTIES")
             }
 
@@ -101,15 +109,37 @@ class DBH {
 
             this.log("initing DB connection...")
 
-            mongoose.connect(`mongodb://${config.DB.user}:${config.DB.password}@${config.DB.host}/${config.DB.database}?retryWrites=true`).then(() => {
+            this.mongoose.connect(`mongodb://${this.config.DB.user}:${this.config.DB.password}@${this.config.DB.host}/${this.config.DB.database}?retryWrites=true`).then(() => {
+
+                // clearing all useless data
+                if (this.config.initClearMemory) {
+                    if (this.config.debug) {
+                        this.warn("Clearing useless memory...")
+                    }
+
+                    this.temp = null
+                    templates = null
+                    GEN = null
+                    this.gen = null
+                    this.init = null
+
+                    if (this.config.debug) {
+                        this.warn("Cleared memory")
+                    }
+
+                }
+
                 this.log("Ready");
                 result();
+
             }).catch(e => { reject(e); });
         });
     }
 
     /**
      * Generates BUILD of prop from gen file, `DO NOT USE THIS METHOD`, it's only for lib
+     * 
+     * I recomend to set config.initClearMemory to true, so this method will be `null` after init method
      * @param {object} x **Object** 
      * @returns {void}
      */
@@ -155,8 +185,8 @@ class DBH {
                 return this.error("DBH.js:gen", x.name, `prop needs DB.schema.data values`)
             }
 
-            p.$schema = new mongoose.Schema(x.DB.schema.data, x.DB.schema.params);
-            p.$model = new mongoose.model(x.DB.name, p.$schema);
+            p.$schema = new this.mongoose.Schema(x.DB.schema.data, x.DB.schema.params);
+            p.$model = new this.mongoose.model(x.DB.name, p.$schema);
 
         } else {
             return this.error("DBH.js:gen", x.name, `prop needs DB.name && DB.schema`)
@@ -231,18 +261,33 @@ class DBH {
 
         // creates format que, checks formats params
         let que = []
-        x.format.forEach(f => {
+
+        if (!x.format) {
+            this.error("DBH.js:gen", x.name, "prop needs format object")
+        }
+
+        if (Array.isArray(x.format)) {
+            this.error("DBH.js:gen", x.name, "format is Array, must be Object")
+        }
+
+        if (!(typeof x.format == "object" && x.format != null)) {
+            this.error("DBH.js:gen", x.name, "format is not an Object")
+        }
+
+        const FK = Object.keys(x.format)
+
+        FK.forEach(FKey => {
+
+            let f = x.format[FKey]
+
+            f.name = FKey
 
             if (!f.params) {
                 f.params = {}
             }
 
-            if (!f.name) {
-                this.error("DBH.js:gen", x.name, "name is not defined")
-            }
-
-            if (typeof f.name != "string") {
-                this.error("DBH.js:gen", x.name, "name is not a string")
+            if (!f.errors) {
+                f.errors = {}
             }
 
             if (!f.type) {
@@ -267,15 +312,17 @@ class DBH {
                 que[this.config.gen.formats[f.type].que] = []
             }
             que[global.dbh.config.gen.formats[f.type].que].push(f)
+
+            return x.format[FKey] = f
         })
 
         // initing que
         que.forEach(qu => {
             qu.forEach(f => {
-                if (config.gen.formats[f.type]) {
+
+                if (this.config.gen.formats[f.type]) {
 
                     let kParams = Object.keys(this.config.gen.formats[f.type].params)
-                    let vParams = Object.values(this.config.gen.formats[f.type].params)
 
                     // checks template params
                     if (kParams) {
@@ -289,24 +336,14 @@ class DBH {
                                         this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.mainMethod is required`)
                                     } else {
 
-                                        if (config.gen.formats[f.type].mainMethodType == "any") {
-                                            return
-                                        }
-
                                         if (!p[f.params.mainMethod]) {
                                             this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.mainMethod is not defined`)
                                         }
 
-                                        if (!this.config.gen.formats[f.type].params.mainMethodType == "any") {
-
-                                            x.format.forEach(format => {
-                                                if (format.name == f.params.mainMethod) {
-                                                    if (format.type != this.config.gen.formats[f.type].params.mainMethodType) {
-                                                        this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.mainMethod is not allowed in this format`)
-                                                    }
-                                                }
-                                            })
-
+                                        if (this.config.gen.formats[f.type].params.mainMethodType != "any") {
+                                            if (x.format[f.params.mainMethod].type != this.config.gen.formats[f.type].params.mainMethodType) {
+                                                this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.mainMethod is not allowed in this format`)
+                                            }
                                         }
                                     }
 
@@ -320,15 +357,9 @@ class DBH {
                                             this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.cacheMethod is not defined`)
                                         }
 
-                                        x.format.forEach(format => {
-                                            if (format.name == f.params.cacheMethod) {
-                                                if (format.type != this.config.gen.formats[f.type].params.cacheMethodType) {
-                                                    this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.cacheMethod is not allowed in this format`)
-                                                } else {
-                                                    return
-                                                }
-                                            }
-                                        })
+                                        if (x.format[f.params.cacheMethod].type != this.config.gen.formats[f.type].params.cacheMethodType) {
+                                            this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.cacheMethod is not allowed in this format`)
+                                        }
                                     }
 
                                 } break;
@@ -341,15 +372,9 @@ class DBH {
                                             this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.getJWTMethod is not defined`)
                                         }
 
-                                        x.format.forEach(format => {
-                                            if (format.name == f.params.getJWTMethod) {
-                                                if (format.type != this.config.gen.formats[f.type].params.getJWTMethodType) {
-                                                    this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.getJWTMethodType is not allowed in this format`)
-                                                } else {
-                                                    return
-                                                }
-                                            }
-                                        })
+                                        if (x.format[f.params.getJWTMethod].type != this.config.gen.formats[f.type].params.getJWTMethodType) {
+                                            this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.getJWTMethodType is not allowed in this format`)
+                                        }
                                     }
 
                                 } break;
@@ -362,15 +387,9 @@ class DBH {
                                             this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.postJWTMethod is not defined`)
                                         }
 
-                                        x.format.forEach(format => {
-                                            if (format.name == f.params.postJWTMethod) {
-                                                if (format.type != this.config.gen.formats[f.type].params.postJWTMethodType) {
-                                                    this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.postJWTMethodType is not allowed in this format`)
-                                                } else {
-                                                    return
-                                                }
-                                            }
-                                        })
+                                        if (x.format[f.params.postJWTMethod].type != this.config.gen.formats[f.type].params.postJWTMethodType) {
+                                            this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.postJWTMethodType is not allowed in this format`)
+                                        }
                                     }
 
                                 } break;
@@ -391,15 +410,19 @@ class DBH {
                                             this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.checkMethod is not defined`)
                                         }
 
-                                        x.format.forEach(format => {
-                                            if (format.name == f.params.checkMethod) {
-                                                if (format.type != this.config.gen.formats[f.type].params.checkMethodType) {
-                                                    this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.checkMethodType is not allowed in this format`)
-                                                } else {
-                                                    return
-                                                }
-                                            }
-                                        })
+                                        if (x.format[f.params.checkMethod].type != this.config.gen.formats[f.type].params.checkMethodType) {
+                                            this.error("DBH.js:gen", `${x.name}.${f.name}`, `params.checkMethodType is not allowed in this format`)
+                                        }
+                                    }
+
+                                } break;
+                                case "disableCopies": {
+
+                                    if (f.params.disableCopies) {
+
+                                        if (!this.config.gen.formats[f.type].params.disableCopies) {
+                                            this.warn(`${x.name}.${f.name}`, `params.disableCopies is not allowed in this format`)
+                                        }
 
                                     }
 
@@ -456,6 +479,28 @@ class DBH {
 
                     }
 
+                    let kErrors = Object.keys(f.errors)
+
+                    if (kErrors) {
+
+                        kErrors.forEach(kError => {
+
+                            if (this.config.gen.formats[f.type].errors[kError]) {
+
+                                if (typeof f.errors[kError] != this.config.gen.formats[f.type].errors[kError]) {
+                                    this.error("DBH.js:gen", `${x.name}.${f.name}`, `typeof errors.${kError} != ${config.gen.formats[f.type].errors[kError]}`)
+                                }
+
+                            } else {
+                                this.warn(`${x.name}.${f.name}`, `errors.${kError} is not using in this method`)
+                            }
+
+                        })
+
+                    } else {
+
+                    }
+
                     // generates method from template
                     let str = `create${f.type.charAt(0).toUpperCase() + f.type.slice(1)}`
 
@@ -479,7 +524,7 @@ class DBH {
         }
 
         // console logs prop info to console
-        if (config.debug) {
+        if (this.config.debug) {
             this.warn("Created prop", x.name)
 
             let temp = ""

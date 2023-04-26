@@ -5,6 +5,11 @@
                 "que": 0,
                 "params": {
                     "rules": true
+                },
+                "errors": {
+                    "q": "string",
+                    "TYPEOF_RULE": "string",
+                    "RULE": "string"
                 }
             },
             "get": {
@@ -13,26 +18,38 @@
                     "checkMethodType": "check",
                     "mainMethodType": "find",
                     "cacheMethodType": "cache"
-                }
+                },
+                "errors": {}
             },
             "post": {
                 "que": 2,
                 "params": {
                     "checkMethodType": "check",
                     "cacheMethodType": "cache",
-                    "checkEquals": true
+                    "checkEquals": true,
+                    "disableCopies": true
+                },
+                "errors": {
+                    "checkEquals": "string",
+                    "disableCopies": "string"
                 }
             },
             "cache": {
                 "que": 1,
                 "params": {
                     "checkMethodType": "check"
+                },
+                "errors": {
+                    "main": "string"
                 }
             },
             "find": {
                 "que": 1,
                 "params": {
                     "checkMethodType": "check"
+                },
+                "errors": {
+                    "main": "string"
                 }
             },
             "put": {
@@ -41,6 +58,11 @@
                     "checkMethodType": "check",
                     "mainMethodType": "find",
                     "checkEquals": true
+                },
+                "errors": {
+                    "checkEquals": "string",
+                    "main": "string",
+                    "q": "string"
                 }
             },
             "delete": {
@@ -48,19 +70,26 @@
                 "params": {
                     "checkMethodType": "check",
                     "mainMethodType": "find"
-                }
+                },
+                "errors": {}
             },
             "postJWT": {
                 "que": 1,
                 "params": {
                     "checkMethodType": "check",
                     "cacheMethodType": "cache"
-                }
+                },
+                "errors": {}
             },
             "getJWT": {
                 "que": 1,
                 "params": {
                     "cacheMethodType": "cache"
+                },
+                "errors": {
+                    "q": "string",
+                    "JWTstring": "string",
+                    "JWTerror": "string"
                 }
             },
             "inOutJWT": {
@@ -69,29 +98,37 @@
                     "mainMethodType": "any",
                     "getJWTMethodType": "getJWT",
                     "postJWTMethodType": "postJWT"
-                }
+                },
+                "errors": {}
             },
             "inJWT": {
                 "que": 4,
                 "params": {
                     "mainMethodType": "any",
                     "getJWTMethodType": "getJWT"
-                }
+                },
+                "errors": {}
             },
             "outJWT": {
                 "que": 4,
                 "params": {
                     "mainMethodType": "any",
                     "postJWTMethodType": "postJWT"
-                }
+                },
+                "errors": {}
             },
             "getById": {
                 "que": 1,
-                "params": {}
+                "params": {},
+                "errors": {
+                    "q": "string",
+                    "main": "string"
+                }
             }
         }
     },
     "debug": false,
+    "initClearMemory": true,
     "DB": {
 		"user": "",
 		"password": "",
