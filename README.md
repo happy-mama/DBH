@@ -1,7 +1,15 @@
 # what is it?
-DBH is an instrument to create methods for MongoDB
+DBH is a powerfull library for creating methods to work with MongoDB
 
-It using your config and creating methods, it ables you create a lot of methods in 5 minutes
+I am using it myself in [API](https://api.happy.tatar) for my site. It is very fast and simple to understand.
+
+If you don't like to check every param from http requests, DBH has good instruments to check your params values and types. It will't able you to make mistake and save wrong data.
+
+Also you can write your own errors names if you don't like DBH default error names
+
+It using config params and creating methods from templates
+
+Full guide on [my site](https://happy.tatar/instruments/DBH)
 
 # install
 
@@ -36,10 +44,12 @@ It using your config and creating methods, it ables you create a lot of methods 
 // req.body.auth - jwt token
 DBH.User.postJWT(req.body.auth).then(user => {
   DBH.User.login(user).then(User => {
-      User.name = "Vasya"
+      User.name = "John"
+      User.surname = "Doe"
       User.save()
       // ...
 ```
 
+<<<<<<< HEAD
 # GEN template guide:
 see ./example/gen.example.js
