@@ -5,18 +5,15 @@
 |___/|___/   |_| |_|_/ \_|_|\__|____/|____|____|_|\_\
 
 MongoDB + mongoose
-v - 1.0а
 
 DataBase Handler
 by happy-mama
 */
 
-let templates = require("./templates.js");
-let GEN = require("./gen.js")
-
 class DBH {
 
     constructor() {
+        this.templates = require("./templates.js")
         this.mongoose = require("mongoose");
         this.JWT = require("jsonwebtoken");
         this.temp = {
@@ -71,34 +68,56 @@ class DBH {
      * Inits DBH class
      * 
      * I recomend to set config.initClearMemory to true, so this method will be `null` after init method
-     * @param {object} myGen **Object** - put your GEN object (if void, used gen.js in src folder)
+     * @param {object} DB **Object** - MongoDB auth data
+     * @param {string} DB.login
+     * @param {string} DB.password
+     * @param {string} DB.host
+     * @param {string} DB.database
+     * @param {object} GEN **Object** - put your GEN object (if void, used gen.js in src folder)
      * @returns {Promise<void>}
      */
-    init(myGen) {
+    init(DB, options, GEN) {
         return new Promise((result, reject) => {
 
             global.dbh = this
             let timeStart = new Date()
             this.log("Initing...")
 
-            if (myGen) {
-                GEN = myGen
-            }
+            // set config values
+            const oKeys = Object.keys(options)
+            const cKeys = Object.keys(this.config)
 
-            if (!this.config.JWTS) {
-                reject("ENOJWTS")
+            oKeys.forEach(oKey => {
+                if (!cKeys.includes(oKey)) {
+                    return this.warn("There is no config param", oKey)
+                }
+
+                if (typeof this.config[oKey] != typeof options[oKey]) {
+                    return this.error(`Typeof config.${oKey} != options.${oKey}`)
+                }
+
+                this.config[oKey] = options[oKey]
+            })
+
+            if (!GEN) {
+                this.error("DBH.js:init", "", "ENOGEN")
             }
 
             if (!(
-                this.config.DB.database ||
-                this.config.DB.host ||
-                this.config.DB.password ||
-                this.config.DB.user
+                DB.database ||
+                DB.host ||
+                DB.password ||
+                DB.login
             )) {
-                reject("ENODBPROPERTIES")
+                this.error("DBH.js:init", "", "ENOBDPROPERTIES")
             }
 
-            let gValues = Object.values(GEN.props)
+            if (options.gen) {
+                this.error("DBH.js:init", "", "EDONOTEDITGENOBJECT")
+            }
+
+            // create templates
+            let gValues = Object.values(GEN)
 
             gValues.forEach(gValue => {
                 // building...
@@ -109,7 +128,7 @@ class DBH {
 
             this.log("initing DB connection...")
 
-            this.mongoose.connect(`mongodb://${this.config.DB.user}:${this.config.DB.password}@${this.config.DB.host}/${this.config.DB.database}?retryWrites=true`).then(() => {
+            this.mongoose.connect(`mongodb://${DB.login}:${DB.password}@${DB.host}/${DB.database}?retryWrites=true`).then(() => {
 
                 // clearing all useless data
                 if (this.config.initClearMemory) {
@@ -118,9 +137,8 @@ class DBH {
                     }
 
                     this.temp = null
-                    templates = null
+                    this.templates = null
                     GEN = null
-                    this.gen = null
                     this.init = null
 
                     if (this.config.debug) {
@@ -145,6 +163,10 @@ class DBH {
      */
     gen(x) {
 
+        if (!x) {
+            this.error("DBH.js:gen", "", "prop is empty")
+        }
+
         // creating prop build
         let p = {
             $schema: {}, // mongoose.schema
@@ -165,6 +187,7 @@ class DBH {
         }
 
         // initing prop DB collection
+
         if (x.DB) {
 
             if (!x.DB.name) {
@@ -497,8 +520,6 @@ class DBH {
 
                         })
 
-                    } else {
-
                     }
 
                     // generates method from template
@@ -507,7 +528,7 @@ class DBH {
                     if (p[f.name]) {
                         this.error("DBH.js:gen", `${x.name}.${f.name}`, "method name already exists")
                     } else {
-                        p[f.name] = templates[str](x, f, p)
+                        p[f.name] = this.templates[str](x, f, p)
                     }
 
                 } else {
@@ -521,38 +542,6 @@ class DBH {
             return this.error("DBH.js:gen", x.name, "BUILD already exists")
         } else {
             this[x.name] = p
-        }
-
-        // console logs prop info to console
-        if (this.config.debug) {
-            this.warn("Created prop", x.name)
-
-            let temp = ""
-            x.format.forEach(c => {
-                let str = `           ${c.type}[${c.name}]`
-                temp += "\n" + str
-            })
-
-            if (temp) {
-                this.warn("^ methods", temp)
-            }
-
-            temp = ""
-            x.format.forEach(c => {
-                let strWarn = `           ${c.name}`
-                let warns = 0
-                if (!c.params.useCheck) {
-                    warns++
-                    strWarn += "[noCheck]"
-                }
-                if (warns) {
-                    temp += "\n" + strWarn
-                }
-            })
-
-            if (temp) {
-                this.warn("^ NOTE", temp)
-            }
         }
 
     }

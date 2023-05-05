@@ -4,12 +4,10 @@
     "mongodb": "^5.1.0",
     "mongoose": "^7.0.0"
   },
-  "name": "dbh2",
-  "version": "1.0a",
-  "main": "src/DBH.js",
-  "scripts": {
-    "test": "node src/test.js"
-  },
+  "name": "hm-dbh",
+  "version": "1.0.3",
+  "main": "./src/DBH.js",
+  "scripts": {},
   "author": "",
   "license": "ISC",
   "description": ""

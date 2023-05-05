@@ -128,12 +128,5 @@
         }
     },
     "debug": false,
-    "initClearMemory": true,
-    "DB": {
-		"user": "",
-		"password": "",
-		"host": "",
-		"database": ""
-	},
-    "JWTS": ""
+    "initClearMemory": true
 }

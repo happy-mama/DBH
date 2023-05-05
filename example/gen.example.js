@@ -143,4 +143,4 @@ const props = {
     }
 }
 
-module.exports = { props }
+module.exports = props
