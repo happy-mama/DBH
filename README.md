@@ -1,4 +1,5 @@
 # what is it?
+
 DBH is a powerfull library for creating methods to work with MongoDB
 
 I am using it myself in [API](https://api.happy.tatar) for my site. It is very fast and simple to understand.
@@ -50,6 +51,5 @@ DBH.User.postJWT(req.body.auth).then(user => {
       // ...
 ```
 
-<<<<<<< HEAD
 # GEN template guide:
 see ./example/gen.example.js
