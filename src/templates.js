@@ -240,8 +240,13 @@ function createFind(x, f, p) {
     let rawF = `return new Promise((result, reject) => {
         ${checkRaw[0]}
             let model = ${JSON.stringify(rawModel)}
-            let qNames = Object.keys(q);
-            qNames.forEach(n => {
+            let qKeys = []
+            if (q._doc) {
+                qKeys = Object.keys(q._doc)
+            } else {
+                qKeys = Object.keys(q);
+            }
+            qKeys.forEach(n => {
                 model[n] = q[n]
             });
             global.dbh.${x.name}.$model.findOne(model).then(d => {
@@ -318,8 +323,13 @@ function createPut(x, f, p) {
             let model = ${JSON.stringify(rawModel)}
                 ${mainMethod[0]}(q.data).then(found => {
                     let eFound = {}
-                    let foundNames = Object.keys(q.data)
-                    foundNames.forEach(n => {
+                    let foundKeys = []
+                    if (q.data._doc) {
+                        foundKeys = Object.keys(q.data._doc)
+                    } else {
+                        foundKeys = Object.keys(q.data)
+                    }
+                    foundKeys.forEach(n => {
                         if (n != "_id") {
                             eFound[n] = q.put[n]
                         }
@@ -329,7 +339,7 @@ function createPut(x, f, p) {
                             return reject("${mainE}")
                         }).catch(e => {
                             if (e == "${findE}") {
-                                foundNames.forEach(n => {
+                                foundKeys.forEach(n => {
                                     if (n != "_id") {
                                         found[n] = eFound[n]
                                     }
