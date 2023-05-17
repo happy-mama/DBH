@@ -1,4 +1,4 @@
-function createCheck(x, f, p) {
+function createCheckOld(x, f, p) {
   let rules = [];
   let typeof_rules = [];
 
@@ -68,6 +68,28 @@ function createCheck(x, f, p) {
 
         result()
     })`;
+
+  return Function("q", rawF);
+}
+
+function createCheck(x, f, p) {
+  const q_ERROR = f.errors.q || `ECHECK:!q`;
+
+  let rawF = `return new Promise((result, reject) => {
+    if (!q) {
+      return reject("${q_ERROR}")
+    }
+    q = new global.dbh.${x.name}.$model(q)
+    const E = q.validateSync()
+    if (E) {
+      let error = {}
+      error.message = E.message
+      error.paths = Object.keys(E.errors)
+      return reject(error)
+    } else {
+      return result(q)
+    }
+  })`;
 
   return Function("q", rawF);
 }
@@ -161,7 +183,7 @@ function createPost(x, f, p) {
     saveCache = `global.dbh.${x.name}.$cache.map.set(m.${x.cache.identification}, m);`;
   }
 
-  let checkEquals = ["", "", ""];
+  let checkEquals = ["", ""];
   if (f.params.checkEquals) {
     f.params.checkEquals.forEach((equal) => {
       let checkEqualsE = `EBUSY:${equal}`;
@@ -228,14 +250,6 @@ function createFind(x, f, p) {
     ];
   }
 
-  let mNames = Object.keys(x.DB.schema.data);
-
-  let rawModel = {};
-
-  mNames.forEach((n) => {
-    rawModel[n] = undefined;
-  });
-
   let saveCache = "";
   if (x.cache.use) {
     saveCache = `global.dbh.${x.name}.$cache.map.set(d.${x.cache.identification}, d);`;
@@ -245,17 +259,7 @@ function createFind(x, f, p) {
 
   let rawF = `return new Promise((result, reject) => {
         ${checkRaw[0]}
-            let model = ${JSON.stringify(rawModel)}
-            let qKeys = []
-            if (q._doc) {
-                qKeys = Object.keys(q._doc)
-            } else {
-                qKeys = Object.keys(q);
-            }
-            qKeys.forEach(n => {
-                model[n] = q[n]
-            });
-            global.dbh.${x.name}.$model.findOne(model).then(d => {
+            global.dbh.${x.name}.$model.findOne(q).then(d => {
                 if (!d) {
                     reject("${mainError}")
                 } else {
@@ -304,11 +308,11 @@ function createPut(x, f, p) {
         );
       } else {
         checkEqualsStart += `global.dbh.${x.name}.$model.findOne({"${equal}": eFound.${equal}}).then(ch => {
-                    if (ch) {
-                        if (String(ch._id) != String(found._id)) {
-                            return reject("${checkEqualsE}")
-                        }
-                    }`;
+          if (ch) {
+            if (String(ch._id) != String(found._id)) {
+              return reject("${checkEqualsE}")
+            }
+          }`;
         checkEqualsEnd += `}).catch(e => { return reject(e) })`;
       }
     });
@@ -452,12 +456,12 @@ function createDelete(x, f, p) {
     ];
   }
 
+  let mainMethod = `global.dbh.${x.name}.${f.params.mainMethod}`;
+
   let deleteCache = "";
   if (x.cache.use) {
     deleteCache = `global.dbh.${x.name}.$cache.map.delete(d.${x.cache.identification});`;
   }
-
-  let mainMethod = `global.dbh.${f.params.mainMethod}`;
 
   let rawF = `return new Promise((result, reject) => {
         ${checkRaw[0]}
