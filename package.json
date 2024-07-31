@@ -1,8 +1,8 @@
 {
   "dependencies": {
-    "jsonwebtoken": "^9.0.0",
+    "jsonwebtoken": "^9.0.2",
     "mongodb": "^5.1.0",
-    "mongoose": "^7.0.0"
+    "mongoose": "^7.8.0"
   },
   "name": "hm-dbh",
   "version": "1.0.7",
