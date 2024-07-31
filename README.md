@@ -10,8 +10,6 @@ Also you can write your own errors names if you don't like DBH default error nam
 
 It using config params and creating methods from templates
 
-Full guide on [my site](https://happy.tatar/instruments/DBH)
-
 # install
 
 ```
